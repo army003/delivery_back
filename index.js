@@ -12,10 +12,16 @@ var pool = createPool({
 
 app.use(
   cors({
-    origin: "http://127.0.0.1:5176",
+    origin: "http://127.0.0.1:5173",
   })
 );
 app.use(express.json());
+
+//метод для отображения заказов
+app.get("/orders", (req, result) => {
+  const sql = "SELECT * FROM delivery";
+  pool.query(sql, (err, res) => result.json(res));
+});
 
 //метод для получения продуктов по категории
 
@@ -61,19 +67,19 @@ app.post("/auth", (req, res) => {
 });
 
 //метод для обновления статуса заказа
+
 app.patch("/change-status", (req, res) => {
   const { delivery_status, id } = req.body;
-  const sql = `UPDATE delivery SET delivery_status = ? WHERE id = ?`;
+  const sql = "UPDATE delivery SET delivery_status = ? WHERE id = ?";
   pool.query(sql, [delivery_status, id], (err, result) => {
-    if (err) {
-      throw err;
-    }
-    if (result.length > 0) {
-      res.send("Status changed");
+    if (err) throw err;
+    if (result) {
+      res.status(200);
+      console.log(result);
+      res.send("Status updated");
     }
   });
 });
-//метод для отображения заказов
 
 app.listen(3000, () => {
   console.log(`Server is running on port 8000.`);
