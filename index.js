@@ -17,6 +17,13 @@ app.use(
 );
 app.use(express.json());
 
+//метод для получения suppliers
+app.get("/suppliers", (req, result) => {
+  const params = req.query;
+  let sql = `SELECT * FROM supplier join ${params.supplier_type} on supplier.id=${params.supplier_type}.supplier_id `;
+  pool.query(sql, (err, res) => result.json(res));
+});
+
 //метод для отображения заказов
 app.get("/orders", (req, result) => {
   const sql = "SELECT * FROM delivery";
