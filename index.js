@@ -55,7 +55,8 @@ app.post("/create-order", (req, res) => {
   pool.query(sql, item, (err, result) => {
     if (err) throw err;
     console.log(result);
-    res.send("Item created");
+    res.status(200);
+    res.send({ data: null });
   });
 });
 
