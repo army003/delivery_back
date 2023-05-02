@@ -27,7 +27,12 @@ app.get("/suppliers", (req, result) => {
 
 //метод для отображения заказов
 app.get("/orders", (req, result) => {
-  const sql = "SELECT * FROM delivery";
+  const params = req.query;
+  console.log(params);
+  const sql = params.courier_id
+    ? `SELECT delivery.id as delivery_id,class_id,product.id as product_id, delivery_date,delivery_time,quantity,product.name as product_name,customer.name as customer_name,customer.address, delivery_status,customer.number as phone_number from delivery join customer on delivery.customer_id=customer.id join product on delivery.product_id=product.id where courier_id=${params.courier_id}`
+    : "SELECT delivery.id as delivery_id,class_id,product.id as product_id, delivery_date,delivery_time,quantity,product.name as product_name,customer.name as customer_name,customer.address, delivery_status,customer.number as phone_number from delivery join customer on delivery.customer_id=customer.id join product on delivery.product_id=product.id";
+
   pool.query(sql, (err, res) => result.json(res));
 });
 
@@ -36,14 +41,16 @@ app.get("/orders", (req, result) => {
 app.get("/products", (req, result) => {
   const params = req.query;
   pool.query(
-    `SELECT * FROM product WHERE supplier_id=${params.supplier_id} `,
+    params.supplier_id
+      ? `SELECT * FROM product join images on product.id=images.product_id WHERE supplier_id=${params.supplier_id} `
+      : `SELECT * FROM product join images on product.id=images.product_id`,
     (err, res) => result.json(res)
   );
 });
 
 app.get("/product", (req, result) => {
   const params = req.query;
-  const sql = `SELECT product.id,product_class.class_name,product.price,supplier.title,product.supplier_id,supplier.address,supplier.number,supplier.supplier_type,product.name  FROM product_class JOIN product on product.class_id=product_class.id join supplier on product.supplier_id=supplier.id where product.id=${params.id}`;
+  const sql = `SELECT product.id,product_class.class_name,product.price,supplier.title,product.supplier_id,supplier.address,data, supplier.number,supplier.supplier_type,product.name  FROM product_class JOIN product on product.class_id=product_class.id join supplier on product.supplier_id=supplier.id join images on product.id=images.product_id where product.id=${params.id}`;
   pool.query(sql, (err, res) => result.json({ data: res }));
 });
 
@@ -55,6 +62,33 @@ app.post("/create-order", (req, res) => {
   pool.query(sql, item, (err, result) => {
     if (err) throw err;
     console.log(result);
+    res.status(200);
+    res.send({ data: null });
+  });
+});
+
+//метод для присвоения заказа курьеру
+app.patch("/take-order", (req, res) => {
+  const { courier_id, id } = req.body;
+  const sql = `UPDATE delivery SET courier_id = ${courier_id},delivery_status='IN_PROGRESS' WHERE id=${id}`;
+  pool.query(sql, (err, result) => {
+    if (err) {
+      throw err;
+    }
+    res.status(200);
+    res.send({ data: null });
+  });
+});
+
+//метод для завершения доставки
+app.patch("/delivered", (req, res) => {
+  const { id } = req.body;
+  console.log(id, id);
+  const sql = `UPDATE delivery SET delivery_status='DELIVERED' WHERE id=${id}`;
+  pool.query(sql, (err, result) => {
+    if (err) {
+      throw err;
+    }
     res.status(200);
     res.send({ data: null });
   });
