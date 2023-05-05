@@ -25,6 +25,13 @@ app.get("/suppliers", (req, result) => {
   pool.query(sql, (err, res) => result.json(res));
 });
 
+//метод для получения couriers
+app.get("/couriers", (req, result) => {
+  const params = req.query;
+  let sql = `SELECT * FROM deliveryman`;
+  pool.query(sql, (err, res) => result.json(res));
+});
+
 //метод для отображения заказов
 app.get("/orders", (req, result) => {
   const params = req.query;
